@@ -1,0 +1,91 @@
+cbuffer global : register(b5)
+{
+    float4 gConst[32];
+};
+
+cbuffer frame : register(b4)
+{
+    float4 time;
+    float4 aspect;
+};
+
+cbuffer camera : register(b3)
+{
+    float4x4 world[2];
+    float4x4 view[2];
+    float4x4 proj[2];
+    int k1;
+    int k2;
+};
+
+cbuffer drawMat : register(b2)
+{
+    float4x4 model;
+    float hilight;
+};
+
+struct VS_OUTPUT
+{
+    float4 pos : SV_POSITION;
+    float4 vpos : POSITION0;
+    float4 wpos : POSITION1;
+    float4 vnorm : NORMAL1;
+    float2 uv : TEXCOORD0;
+};
+
+float3 rotY(float3 pos, float a)
+{
+    float3x3 m =
+    {
+        cos(a), 0, sin(a),
+        0, 1, 0,
+        -sin(a), 0, cos(a)
+    };
+    pos = mul(pos, m);
+    return pos;
+}
+
+static float pi = 3.14159265;
+static int p0 = 0;
+static int q0 = 1;
+static float s = 0.46;
+
+float3 f(float t) {
+    float r = cos(2 * pi * q0 * t / k1) + 2;
+    return float3(r * cos(2 * pi * p0 * t / k1), r * sin(2 * pi * p0 * t / k1), -sin(2 * pi * q0 * t / k1));
+}
+
+float3 fd(float t) {
+    return normalize(f(t + 0.001) - f(t));
+}
+
+float3 fdd(float t) {
+    return normalize(f(t + 0.001) - 2*f(t) + f(t-0.001));
+}
+
+float3 g(float t1, float t2) {
+    float3 b1 = s * normalize(cross(fd(t2), fdd(t2)));
+    float3 b2 = s * normalize(cross(fd(t2), b1));
+    return f(t2) + b1 * cos((2 * t1 + (t2 % 2)) * pi / k2) + b2 * sin((2 * t1 + (t2 % 2)) * pi / k2);
+}
+
+
+VS_OUTPUT VS(uint vID : SV_VertexID)
+{
+    VS_OUTPUT output = (VS_OUTPUT)0;
+
+    int unum = floor(vID / 6);
+
+    float3 quad[6] = { g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum + k2,floor(unum / k2) + 1),
+        g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum - k2,floor(unum / k2) - 1) };
+
+    float3 p = quad[vID%6];
+
+    //float3 quad2[3] = { float3(0,0,0), float3(0,1,1), float3(0,-1,1) };
+    //float3 q = quad2[vID%3];
+
+    float4 pos = float4(p, 1);
+    output.pos = mul(pos, mul(view[0], proj[0]));
+    output.uv = float2(1, -1) * p / 2. + .5;
+    return output;
+}

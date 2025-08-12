@@ -1,0 +1,25 @@
+﻿  dx11minimal.cpp
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(414,3): error C2664: 'void OutputDebugStringW(LPCWSTR)': cannot convert argument 1 from 'const char *' to 'LPCWSTR'
+  (compiling source file 'dx11minimal.cpp')
+      C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(414,21):
+      Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\debugapi.h(61,1):
+      see declaration of 'OutputDebugStringW'
+      C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(414,3):
+      while trying to match the argument list '(const char *)'
+  
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(860,84): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'dx11minimal.cpp')
+  
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(860,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  (compiling source file 'dx11minimal.cpp')
+  
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(920,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'dx11minimal.cpp')
+  
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(923,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'dx11minimal.cpp')
+  
+C:\Users\stud4\source\repos\dddd\dx11minimal\dx11minimal\dx11.h(923,36): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'dx11minimal.cpp')
+  
