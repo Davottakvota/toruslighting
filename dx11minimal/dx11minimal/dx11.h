@@ -920,13 +920,15 @@ namespace Camera
 		float t = timer::frameBeginTime*.001;
 		float angle = 100;
 		float a = 3.5;
-		XMVECTOR Eye = XMVectorSet(sin(t)*a, 0, cos(t)*a, 0.0f);
+		XMVECTOR Eye = XMVectorSet(0, cos(t) * a, sin(t)*a, 0.0f);
 		XMVECTOR At = XMVectorSet(0, 0, 0, 0.0f);
-		XMVECTOR Up = XMVectorSet(0, 1, 0, 0.0f);
+		XMVECTOR Up = XMVectorSet(1, 0, 0, 0.0f);
 
 		ConstBuf::camera.world[0] = XMMatrixIdentity();
 		ConstBuf::camera.view[0] = XMMatrixTranspose(XMMatrixLookAtLH(Eye, At, Up));
 		ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(angle), iaspect, 0.01f, 100.0f));
+		ConstBuf::camera.k1 = k1;
+		ConstBuf::camera.k2 = k2;
 
 		ConstBuf::UpdateCamera();
 		ConstBuf::ConstToVertex(3);
@@ -951,8 +953,10 @@ void mainLoop()
 	ConstBuf::ConstToVertex(4);
 	ConstBuf::ConstToPixel(4);
 
-	int k1 = 8;
-	int k2 = 5;
+
+	int k1 = 50;
+	k1 *= 2; //Чётное
+	int k2 = 20;
 	
 
 	Camera::Camera(k1,k2);

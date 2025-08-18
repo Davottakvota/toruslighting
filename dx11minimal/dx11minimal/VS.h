@@ -46,21 +46,22 @@ float3 rotY(float3 pos, float a)
 }
 
 static float pi = 3.14159265;
-static int p0 = 0;
-static int q0 = 1;
+static int p0 = 2;
+static int q0 = 3;
 static float s = 0.46;
 
 float3 f(float t) {
     float r = cos(2 * pi * q0 * t / k1) + 2;
-    return float3(r * cos(2 * pi * p0 * t / k1), r * sin(2 * pi * p0 * t / k1), -sin(2 * pi * q0 * t / k1));
+    float3 res = float3(r * cos(2 * pi * p0 * t / k1), r * sin(2 * pi * p0 * t / k1), -sin(2 * pi * q0 * t / k1));
+    return res;
 }
 
 float3 fd(float t) {
-    return normalize(f(t + 0.001) - f(t));
+    return normalize(f(t + 0.05) - f(t));
 }
 
 float3 fdd(float t) {
-    return normalize(f(t + 0.001) - 2*f(t) + f(t-0.001));
+    return normalize(f(t + 0.05) - 2*f(t) + f(t-0.05));
 }
 
 float3 g(float t1, float t2) {
@@ -74,17 +75,18 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
 
-    int unum = floor(vID / 6);
+    int unum = floor(vID / 6.0);
 
     float3 quad[6] = { g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum + k2,floor(unum / k2) + 1),
         g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum - k2,floor(unum / k2) - 1) };
 
     float3 p = quad[vID%6];
 
-    //float3 quad2[3] = { float3(0,0,0), float3(0,1,1), float3(0,-1,1) };
+    //float3 quad2[3] = { g(unum,floor(unum / k2)), float3(0,1,1), float3(0,-1,1)};
     //float3 q = quad2[vID%3];
 
     float4 pos = float4(p, 1);
+    pos -= float4(0, 0, 0, -0.3);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
     return output;
