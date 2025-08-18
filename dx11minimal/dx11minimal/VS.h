@@ -46,13 +46,13 @@ float3 rotY(float3 pos, float a)
 }
 
 static float pi = 3.14159265;
-static int p0 = 2;
-static int q0 = 3;
-static float s = 0.46;
+static int p0 = 3;
+static int q0 = 7;
+static float s = 0.35;
 
 float3 f(float t) {
-    float r = cos(2 * pi * q0 * t / k1) + 2;
-    float3 res = float3(r * cos(2 * pi * p0 * t / k1), r * sin(2 * pi * p0 * t / k1), -sin(2 * pi * q0 * t / k1));
+    float r = cos(2 * pi * q0 * (t+time[0] * 0.4) / k1) + 2;
+    float3 res = float3(r * cos(2 * pi * p0 * (t + time[0] * 0.4) / k1), r * sin(2 * pi * p0 * (t + time[0] * 0.4) / k1), -sin(2 * pi * q0 * (t + time[0] * 0.4) / k1));
     return res;
 }
 
@@ -86,7 +86,7 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     //float3 q = quad2[vID%3];
 
     float4 pos = float4(p, 1);
-    pos -= float4(0, 0, 0, -0.3);
+    pos -= float4(0, 0, 0, - 0.5);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
     return output;
