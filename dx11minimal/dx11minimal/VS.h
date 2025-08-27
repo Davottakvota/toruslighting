@@ -29,7 +29,7 @@ struct VS_OUTPUT
     float4 pos : SV_POSITION;
     float4 vpos : POSITION0;
     float4 wpos : POSITION1;
-    float4 vnorm : NORMAL1;
+    float3 vnorm : NORMAL1;
     float2 uv : TEXCOORD0;
 };
 
@@ -45,9 +45,34 @@ float3 rotY(float3 pos, float a)
     return pos;
 }
 
+float3 rotX(float3 pos, float a)
+{
+    float3x3 m =
+    {
+        cos(a), sin(a), 0,
+        -sin(a), cos(a), 0,
+        0, 0, 1
+    };
+    pos = mul(pos, m);
+    return pos;
+}
+
+float3 rotZ(float3 pos, float a)
+{
+    float3x3 m =
+    {
+        1, 0, 0,
+        0, cos(a), sin(a),
+        0,-sin(a), cos(a),
+        
+    };
+    pos = mul(pos, m);
+    return pos;
+}
+
 static float pi = 3.14159265;
-static int p0 = 3;
-static int q0 = 7;
+static int p0 = 0;
+static int q0 = 1;
 static float s = 0.35;
 
 float3 f(float t) {
@@ -76,22 +101,26 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     VS_OUTPUT output = (VS_OUTPUT)0;
 
     int unum = floor(vID / 6.0);
+    float vsss = floor(unum / k2+1);
 
-    float3 quad[6] = { g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum + k2,floor(unum / k2) + 1),
-        g(unum,floor(unum / k2)), g(unum + 1 - 2 * (floor(unum / k2) % 2),floor(unum / k2)), g(unum - k2,floor(unum / k2) - 1) };
+    float3 quad[6] = { g(unum,vsss), g(unum + 1 - 2 * (vsss % 2),vsss), g(unum + k2,vsss + 1),
+        g(unum,vsss), g(unum + 1 - 2 * (vsss % 2),vsss), g(unum - k2,vsss - 1) };
 
     float3 p = quad[vID%6];
 
-    //float3 quad2[3] = { g(unum,floor(unum / k2)), float3(0,1,1), float3(0,-1,1)};
+    //float3 quad2[3] = { g(unum,vsss), float3(0,1,1), float3(0,-1,1)};
     //float3 q = quad2[vID%3];
 
+    p = rotZ(p, time[0]*0.025);
+
     float4 pos = float4(p, 1);
-    pos -= float4(0, 0, 0, - 0.5);
+    pos -= float4(2, 0, 0, 0.4);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
-    float3 N1 = g(unum+k2+floor(unum/k2)%2,floor(unum/k2)-1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)+1);
-    float3 N2 = g(unum+k2+floor(unum/k2)%2,floor(unum/k2)+1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)-1);
+    float3 N1 = g(unum+k2+floor(unum/k2)%2,floor(unum / k2)-1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)+1);
+    float3 N2 = g(unum+k2+floor(unum/k2)%2,floor(unum / k2)+1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)-1);
 
-    output.vnorm = float4(cross(N1,N2),1);
+    output.vnorm = rotZ(normalize(cross(N1, N2)), time[0] * 0.025);
+
     return output;
 }

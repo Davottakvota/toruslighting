@@ -32,15 +32,21 @@ struct VS_OUTPUT
     float4 pos : SV_POSITION;
     float4 vpos : POSITION0;
     float4 wpos : POSITION1;
-    float4 vnorm : NORMAL1;
+    float3 vnorm : NORMAL1;
     float2 uv : TEXCOORD0;
 };
+
+static float3 lightvector = float3(0, -0.55, -1);
 
 float4 PS(VS_OUTPUT input) : SV_Target
 {
     float pi = 3.141519;
 
-    float c = 0;
+    float3 h = 2 * (dot(lightvector, input.vnorm) * input.vnorm) - lightvector;
+    
+    float I = 0.05 + 0.25 * max(dot(lightvector, input.vnorm), 0) + 0.001*max(pow(dot(h, input.vnorm), 52),0);
+    
+    float c = I;
 
     return float4(c, c, c, 1.);
 

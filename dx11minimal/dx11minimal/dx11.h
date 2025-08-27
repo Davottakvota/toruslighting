@@ -920,7 +920,7 @@ namespace Camera
 		float t = timer::frameBeginTime*.001;
 		float angle = 90;
 		float a = 3.5;
-		XMVECTOR Eye = XMVectorSet(0, cos(t * 0.333) * a, sin(t * 0.333) * a, 0.0f);
+		XMVECTOR Eye = XMVectorSet(0, -a, 0, 0.0f);
 		XMVECTOR At = XMVectorSet(0, 0, 0, 0.0f);
 		XMVECTOR Up = XMVectorSet(1, 0, 0, 0.0f);
 
@@ -955,9 +955,9 @@ void mainLoop()
 	ConstBuf::ConstToPixel(4);
 
 
-	int k1 = 120;
+	int k1 = 200;
 	k1 *= 2;
-	int k2 = 10;
+	int k2 = 100;
 	
 
 	Camera::Camera(k1,k2);
