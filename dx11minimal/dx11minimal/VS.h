@@ -70,6 +70,14 @@ float3 rotZ(float3 pos, float a)
     return pos;
 }
 
+float hash11(uint n)
+{
+    // integer hash copied from Hugo Elias
+    n = (n << 13U) ^ n;
+    n = n * (n * n * 15731U + 789221U) + 1376312589U;
+    return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
+}
+
 static float pi = 3.14159265;
 static int p0 = 0;
 static int q0 = 1;
@@ -92,7 +100,7 @@ float3 fdd(float t) {
 float3 g(float t1, float t2) {
     float3 b1 = s * normalize(cross(fd(t2), fdd(t2)));
     float3 b2 = s * normalize(cross(fd(t2), b1));
-    return f(t2) + b1 * cos((2 * t1 + (t2 % 2)) * pi / k2) + b2 * sin((2 * t1 + (t2 % 2)) * pi / k2);
+    return f(t2) + b1 * cos((2 * t1) * pi / k2) + b2 * sin((2 * t1) * pi / k2);
 }
 
 
@@ -117,10 +125,11 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     pos -= float4(2, 0, 0, 0.4);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
-    float3 N1 = g(unum+k2+floor(unum/k2)%2,floor(unum / k2)-1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)+1);
-    float3 N2 = g(unum+k2+floor(unum/k2)%2,floor(unum / k2)+1) - g(unum+k2-1+floor(unum/k2)%2,floor(unum/k2)-1);
+    float3 N1 = g(unum, floor(unum / k2) - 1) - g(unum, floor(unum / k2) + 1);
+    float3 N2 = g(unum + 1, floor(unum / k2)) - g(unum - 1, floor(unum / k2));
 
     output.vnorm = rotZ(normalize(cross(N1, N2)), time[0] * 0.025);
+    //output.vnorm = pos.xyz;
 
     return output;
 }

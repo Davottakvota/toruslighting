@@ -955,9 +955,9 @@ void mainLoop()
 	ConstBuf::ConstToPixel(4);
 
 
-	int k1 = 200;
+	int k1 = 10;
 	k1 *= 2;
-	int k2 = 100;
+	int k2 = 10;
 	
 
 	Camera::Camera(k1,k2);
