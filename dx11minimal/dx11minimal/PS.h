@@ -48,6 +48,6 @@ float4 PS(VS_OUTPUT input) : SV_Target
     
     float c = I;
 
-    return float4(input.vnorm, 1.);
+    return float4(c,c,c, 1.);
 
 }
