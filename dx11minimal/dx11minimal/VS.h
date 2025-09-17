@@ -103,28 +103,25 @@ float3 g(float t1, float t2) {
     return f(t2) + b1 * cos((2 * t1) * pi / k2) + b2 * sin((2 * t1) * pi / k2);
 }
 
-float3 c_t(int x, int y, int n) { // n от 0 до 3
+float3 c_t(int x, int y, int n) { // n from 0 to 3
     return g(x - int(x!=2) + int(n == 2) + (y % 2) * int(n < 2), y + int(n == 1) - int(n == 0));
 }
 
+static float3 rect[6] = {float3(0,0,0), float3(1,0,0), float3(0,1,0), float3(1,0,0), float3(0,1,0), float3(1,1,0)};
 
 VS_OUTPUT VS(uint vID : SV_VertexID)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
 
+
+
     int unum = floor(vID / 6.0);
     float vsss = floor(unum / k2);
 
-    //float3 quad[6] = { g(unum,vsss), g(unum + 1 - 2 * (vsss % 2),vsss), g(unum + k2,vsss + 1),
-    //g(unum,vsss), g(unum + 1 - 2 * (vsss % 2),vsss), g(unum - k2,vsss - 1) };
 
-    float3 p = g(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)));
+    float3 p = int(vID >= k1 * k2 * 6) * (rect[vID] + float3(-1, 1, 0)) + int(vID < k1 * k2 * 6) * g(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)));
 
-
-    //float3 quad2[3] = { g(unum,vsss), float3(0,1,1), float3(0,-1,1)};
-    //float3 q = quad2[vID%3];
-
-    p = rotZ(p, time[0]*0.025);
+    p = int(vID < k1 * k2 * 6) * rotZ(p, time[0] * 0.025) + int(vID >= k1 * k2 * 6) * p;
 
     float4 pos = float4(p, 1);
     pos -= float4(2, 0, 0, 0.4);
@@ -134,14 +131,8 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     float3 N1 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 0) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 1);
     float3 N2 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 2) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 3);
 
-    //float3 N1 = c_t(unum, vsss, 0) - c_t(unum, vsss, 1);
-    //float3 N2 = c_t(unum, vsss, 2) - c_t(unum, vsss, 3);
 
-    //float3 N1 = g(unum - 1 + (vsss % 2), vsss - 1) - g(unum + (vsss % 2), vsss + 1);
-    //float3 N2 = g(unum + 1, vsss) - g(unum - 1, vsss);
-
-    output.vnorm = rotZ(normalize(cross(N1, N2)), time[0] * 0.025);
-    //output.vnorm = pos.xyz;
+    output.vnorm = int(vID < k1 * k2 * 6) * rotZ(normalize(cross(N1, N2)), time[0] * 0.025) + int(vID >= k1 * k2 * 6) * normalize(cross(N1, N2));
 
     return output;
 }

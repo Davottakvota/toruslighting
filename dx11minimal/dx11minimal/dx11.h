@@ -19,6 +19,14 @@ using namespace DirectX;
 typedef unsigned long uint32;
 typedef long int32;
 
+extern float cameraYaw;
+extern float cameraPitch;
+extern XMFLOAT3 cameraPosition;
+extern XMFLOAT3 cameraForward;
+extern XMFLOAT3 cameraRight;
+extern XMFLOAT3 cameraUp;
+extern bool mouseCaptured;
+
 static inline int32 _log2(float x)
 {
 	uint32 ix = (uint32&)x;
@@ -858,6 +866,7 @@ void Dx11Init()
 	
 	//main RT
 	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, true);
+
 }
 
 
@@ -937,9 +946,121 @@ namespace Camera
 	}
 }
 
+
+
 void mainLoop()
 {
+
+	static POINT prevMousePos;
+	POINT currentMousePos;
+	GetCursorPos(&currentMousePos);
+
+	if (mouseCaptured)
+	{
+		RECT rect;
+		GetClientRect(hWnd, &rect);
+		POINT center;
+		center.x = rect.right / 2;
+		center.y = rect.bottom / 2;
+		ClientToScreen(hWnd, &center);
+
+		float deltaX = (float)(currentMousePos.x - center.x);
+		float deltaY = (float)(currentMousePos.y - center.y);
+
+
+		if (deltaX != 0 || deltaY != 0)
+		{
+			SetCursorPos(center.x, center.y);
+			prevMousePos = center;
+
+			cameraYaw += deltaX * 0.001f;
+			cameraPitch += deltaY * 0.001f;
+
+			const float limit = XM_PI / 2 - 0.0001f;
+			if (cameraPitch > limit) cameraPitch = limit;
+			if (cameraPitch < -limit) cameraPitch = -limit;
+		}
+	}
+	else
+	{
+		prevMousePos = currentMousePos;
+	}
+
+
+	float speed = 0.1f;
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		cameraPosition.x += cameraForward.x * speed;
+		cameraPosition.y += cameraForward.y * speed;
+		cameraPosition.z += cameraForward.z * speed;
+	}
+
+	if (GetAsyncKeyState('S') & 0x8000)
+	{
+		cameraPosition.x -= cameraForward.x * speed;
+		cameraPosition.y -= cameraForward.y * speed;
+		cameraPosition.z -= cameraForward.z * speed;
+	}
+
+	if (GetAsyncKeyState('D') & 0x8000)
+	{
+		cameraPosition.x -= cameraRight.x * speed;
+		cameraPosition.y -= cameraRight.y * speed;
+		cameraPosition.z -= cameraRight.z * speed;
+	}
+
+	if (GetAsyncKeyState('A') & 0x8000)
+	{
+		cameraPosition.x += cameraRight.x * speed;
+		cameraPosition.y += cameraRight.y * speed;
+		cameraPosition.z += cameraRight.z * speed;
+	}
+	if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+	{
+		cameraPosition.x -= cameraUp.x * speed;
+		cameraPosition.y -= cameraUp.y * speed;
+		cameraPosition.z -= cameraUp.z * speed;
+	}
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		cameraPosition.x += cameraUp.x * speed;
+		cameraPosition.y += cameraUp.y * speed;
+		cameraPosition.z += cameraUp.z * speed;
+	}
+
+	cameraForward.x = cos(cameraYaw) * cos(cameraPitch);
+	cameraForward.y = sin(cameraPitch);
+	cameraForward.z = sin(cameraYaw) * cos(cameraPitch);
+
+	XMVECTOR Forward = XMVector3Normalize(XMLoadFloat3(&cameraForward));
+	XMVECTOR Right = XMVector3Normalize(XMVector3Cross(Forward, XMVectorSet(0, 1, 0, 0)));
+	XMVECTOR Up = XMVector3Normalize(XMVector3Cross(Right, Forward));
+
+	XMStoreFloat3(&cameraForward, Forward);
+	XMStoreFloat3(&cameraRight, Right);
+	XMStoreFloat3(&cameraUp, Up);
+
+	XMVECTOR Eye = XMLoadFloat3(&cameraPosition);
+	XMVECTOR At = Eye + Forward;
+
+	ConstBuf::camera.view[0] = XMMatrixTranspose(XMMatrixLookAtLH(Eye, At, Up));
+	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
+	ConstBuf::camera.world[0] = XMMatrixIdentity();
+
+
+	int k1 = 100;
+	k1 *= 2;
+	int k2 = k1;
+	ConstBuf::camera.k1 = k1;
+	ConstBuf::camera.k2 = k2;
+
+	ConstBuf::UpdateCamera();
+	ConstBuf::ConstToVertex(3);
+	ConstBuf::ConstToPixel(3);
+
+
 	frameConst();
+
 
 	InputAssembler::IA(InputAssembler::topology::triList);
 	Blend::Blending(Blend::blendmode::alpha, Blend::blendop::add);
@@ -955,13 +1076,6 @@ void mainLoop()
 	ConstBuf::ConstToPixel(4);
 
 
-	int k1 = 100;
-	k1 *= 2;
-	int k2 = k1;
-	
-
-	Camera::Camera(k1,k2);
-
-	Draw::NullDrawer(k1*k2, 1);
+	Draw::NullDrawer(k1 * k2 + 1, 1);
 	Draw::Present();
 }

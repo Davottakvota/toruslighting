@@ -15,6 +15,15 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+// Global Variables for camera:
+float cameraYaw = 0.0f;
+float cameraPitch = 0.0f;
+XMFLOAT3 cameraPosition = XMFLOAT3(-7.0f, 2.5f, -3.0f);
+XMFLOAT3 cameraForward = XMFLOAT3(0, 0, 1);
+XMFLOAT3 cameraRight = XMFLOAT3(1, 0, 0);
+XMFLOAT3 cameraUp = XMFLOAT3(0, 1, 0);
+bool mouseCaptured = true;
+
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -77,7 +86,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
+void UpdateCamera()
+{
+    // Computing forward vector from yaw and pitch
+    cameraForward.x = cos(cameraYaw) * cos(cameraPitch);
+    cameraForward.y = sin(cameraPitch);
+    cameraForward.z = sin(cameraYaw) * cos(cameraPitch);
 
+    XMVECTOR Forward = XMVector3Normalize(XMLoadFloat3(&cameraForward));
+    XMVECTOR Right = XMVector3Normalize(XMVector3Cross(Forward, XMVectorSet(0, 1, 0, 0)));
+    XMVECTOR Up = XMVector3Normalize(XMVector3Cross(Right, Forward));
+
+    XMStoreFloat3(&cameraForward, Forward);
+    XMStoreFloat3(&cameraRight, Right);
+    XMStoreFloat3(&cameraUp, Up);
+
+    XMVECTOR Eye = XMLoadFloat3(&cameraPosition);
+    XMVECTOR At = Eye + Forward;
+
+    ConstBuf::camera.view[0] = XMMatrixTranspose(XMMatrixLookAtLH(Eye, At, Up));
+    ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
+    ConstBuf::camera.world[0] = XMMatrixIdentity();
+
+    ConstBuf::UpdateCamera();
+    ConstBuf::ConstToVertex(3);
+    ConstBuf::ConstToPixel(3);
+}
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -130,6 +164,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   // Mouse capture
+   SetCapture(hWnd);
+   ShowCursor(FALSE);
+   mouseCaptured = true;
+
    return TRUE;
 }
 
@@ -164,6 +203,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE)
+        {
+            if (mouseCaptured)
+            {
+                ReleaseCapture();
+                ShowCursor(TRUE);
+                mouseCaptured = false;
+            }
+            else
+            {
+                SetCapture(hWnd);
+                ShowCursor(FALSE);
+
+
+                RECT rect;
+                GetClientRect(hWnd, &rect);
+                POINT center;
+                center.x = rect.right / 2;
+                center.y = rect.bottom / 2;
+                ClientToScreen(hWnd, &center);
+                SetCursorPos(center.x, center.y);
+
+                mouseCaptured = true;
+            }
+        }
+        break;
+
     case WM_PAINT:
         {
             PAINTSTRUCT ps;

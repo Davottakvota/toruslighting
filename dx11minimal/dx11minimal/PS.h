@@ -38,16 +38,24 @@ struct VS_OUTPUT
 
 static float3 lightvector = float3(0, -0.55, -1);
 
+float hash11(uint n)
+{
+    // integer hash copied from Hugo Elias
+    n = (n << 13U) ^ n;
+    n = n * (n * n * 15731U + 789221U) + 1376312589U;
+    return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
+}
+
 float4 PS(VS_OUTPUT input) : SV_Target
 {
     float pi = 3.141519;
 
     float3 h = 2 * (dot(lightvector, input.vnorm) * input.vnorm) - lightvector;
     
-    float I = 0.05 + 0.25 * max(dot(lightvector, input.vnorm), 0) + 0.001*max(pow(dot(h, input.vnorm), 52),0);
+    float3 I = 0.05 * float3(1, 1, 1) + 0.25 * max(dot(lightvector, input.vnorm), 0) * float3(64, 224, 255) * 0.0061 + 0.001 * max(pow(dot(h, input.vnorm), 52), 0) * float3(1, 1, 1);
     
-    float c = I;
+    I -= float3(0.9, 0, 1) * hash11(int(200*input.vnorm[0]))*0.15;
 
-    return float4(c,c,c, 1.);
+    return float4(I, 1.);
 
 }
