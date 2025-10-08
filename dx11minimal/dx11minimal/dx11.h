@@ -469,8 +469,8 @@ namespace Shaders {
 
 	void Init()
 	{
-		CreateVS(0, nameToPatchLPCWSTR("VS.h"));
-		CreatePS(0, nameToPatchLPCWSTR("PS.h"));
+		CreateVS(0, nameToPatchLPCWSTR("..\\dx11minimal\\VS.h"));
+		CreatePS(0, nameToPatchLPCWSTR("..\\dx11minimal\\PS.h"));
 	}
 
 	void vShader(unsigned int n)
@@ -867,6 +867,8 @@ void Dx11Init()
 	//main RT
 	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, true);
 
+	Textures::Create(1, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(1024, 1024), false, true);
+
 }
 
 
@@ -954,6 +956,10 @@ void mainLoop()
 	static POINT prevMousePos;
 	POINT currentMousePos;
 	GetCursorPos(&currentMousePos);
+
+	int quadcount_axis1 = 100;
+	quadcount_axis1 *= 2;
+	int quadcount_axis2 = quadcount_axis1;
 
 	if (mouseCaptured)
 	{
@@ -1043,16 +1049,38 @@ void mainLoop()
 	XMVECTOR Eye = XMLoadFloat3(&cameraPosition);
 	XMVECTOR At = Eye + Forward;
 
-	ConstBuf::camera.view[0] = XMMatrixTranspose(XMMatrixLookAtLH(Eye, At, Up));
+	ConstBuf::camera.view[0] = XMMatrixLookAtLH(Eye, At, Up);
+	//ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
 	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
 	ConstBuf::camera.world[0] = XMMatrixIdentity();
 
 
-	int k1 = 100;
-	k1 *= 2;
-	int k2 = k1;
-	ConstBuf::camera.k1 = k1;
-	ConstBuf::camera.k2 = k2;
+	//rotate
+	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(90)), ConstBuf::camera.view[0]);
+	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+
+	InputAssembler::IA(InputAssembler::topology::triList);
+	Blend::Blending(Blend::blendmode::alpha, Blend::blendop::add);
+
+	Textures::RenderTarget(1, 0);
+	Draw::Clear({ 0,0,1,0 });
+	Draw::ClearDepth();
+	Depth::Depth(Depth::depthmode::on);
+	Rasterizer::Cull(Rasterizer::cullmode::off);
+	Shaders::vShader(0);
+	Shaders::pShader(0);
+	ConstBuf::ConstToVertex(4);
+	ConstBuf::ConstToPixel(4);
+	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
+	//rotate back
+	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(-90)), ConstBuf::camera.view[0]);
+	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+	ConstBuf::UpdateCamera();
+
+
+	ConstBuf::camera.k1 = quadcount_axis1;
+	ConstBuf::camera.k2 = quadcount_axis2;
 
 	ConstBuf::UpdateCamera();
 	ConstBuf::ConstToVertex(3);
@@ -1076,6 +1104,6 @@ void mainLoop()
 	ConstBuf::ConstToPixel(4);
 
 
-	Draw::NullDrawer(k1 * k2 + 1, 1);
+	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
 	Draw::Present();
 }
