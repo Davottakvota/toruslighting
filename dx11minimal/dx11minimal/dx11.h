@@ -948,19 +948,7 @@ namespace Camera
 	}
 }
 
-
-
-void mainLoop()
-{
-
-	static POINT prevMousePos;
-	POINT currentMousePos;
-	GetCursorPos(&currentMousePos);
-
-	int quadcount_axis1 = 100;
-	quadcount_axis1 *= 2;
-	int quadcount_axis2 = quadcount_axis1;
-
+void controls(POINT currentMousePos, POINT prevMousePos) {
 	if (mouseCaptured)
 	{
 		RECT rect;
@@ -1038,6 +1026,9 @@ void mainLoop()
 	cameraForward.y = sin(cameraPitch);
 	cameraForward.z = sin(cameraYaw) * cos(cameraPitch);
 
+}
+
+void CameraSetup() {
 	XMVECTOR Forward = XMVector3Normalize(XMLoadFloat3(&cameraForward));
 	XMVECTOR Right = XMVector3Normalize(XMVector3Cross(Forward, XMVectorSet(0, 1, 0, 0)));
 	XMVECTOR Up = XMVector3Normalize(XMVector3Cross(Right, Forward));
@@ -1053,11 +1044,13 @@ void mainLoop()
 	//ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
 	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
 	ConstBuf::camera.world[0] = XMMatrixIdentity();
+}
 
-
-	//rotate
-	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(90)), ConstBuf::camera.view[0]);
+void RotateAndDraw(float angleX, int quadcount_axis1, int quadcount_axis2) {
+	
+	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(angleX)), ConstBuf::camera.view[0]);
 	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+	ConstBuf::UpdateCamera();
 
 	InputAssembler::IA(InputAssembler::topology::triList);
 	Blend::Blending(Blend::blendmode::alpha, Blend::blendop::add);
@@ -1072,13 +1065,16 @@ void mainLoop()
 	ConstBuf::ConstToVertex(4);
 	ConstBuf::ConstToPixel(4);
 	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
-	//rotate back
+}
+
+void RotateBack(float angleX) {
 	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
-	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(-90)), ConstBuf::camera.view[0]);
+	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(-angleX)), ConstBuf::camera.view[0]);
 	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
 	ConstBuf::UpdateCamera();
+}
 
-
+void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	ConstBuf::camera.k1 = quadcount_axis1;
 	ConstBuf::camera.k2 = quadcount_axis2;
 
@@ -1106,4 +1102,29 @@ void mainLoop()
 
 	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
 	Draw::Present();
+}
+
+void mainLoop()
+{
+
+	static POINT prevMousePos;
+	POINT currentMousePos;
+	GetCursorPos(&currentMousePos);
+
+	int quadcount_axis1 = 100;
+	quadcount_axis1 *= 2;
+	int quadcount_axis2 = quadcount_axis1;
+
+	controls(currentMousePos, prevMousePos);
+
+	CameraSetup();
+
+	float angleX = 105;
+	//rotate
+	RotateAndDraw(angleX, quadcount_axis1, quadcount_axis2);
+	//rotate back
+	RotateBack(angleX);
+
+	UsualDraw(quadcount_axis1, quadcount_axis2);
+
 }
