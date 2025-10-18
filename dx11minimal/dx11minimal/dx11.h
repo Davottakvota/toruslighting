@@ -1028,7 +1028,45 @@ void controls(POINT currentMousePos, POINT prevMousePos) {
 
 }
 
-void CameraSetup() {
+XMMATRIX GenerateProjectionMatrix(float screenDepth, float screenNear)
+{
+	float fieldOfView, screenAspect;
+
+
+	// Setup field of view and screen aspect for a square light source.
+	fieldOfView = 3.14159265358979323846f / 2.0f;
+	screenAspect = 1.0f;
+
+	// Create the projection matrix for the light.
+	return XMMatrixTranspose(XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth));
+
+}
+
+XMMATRIX GenerateViewMatrix(float lengthfactor=1)
+{
+	XMFLOAT3 up;
+	XMVECTOR positionVector, lookAtVector, upVector;
+
+
+	// Setup the vector that points upwards.
+	up.x = 0.0f;
+	up.y = 1.0f;
+	up.z = 0.0f;
+
+	// Load the XMFLOAT3 into XMVECTOR.
+	XMFLOAT3 lightvector = XMFLOAT3(0*lengthfactor, -0.55*lengthfactor, -1*lengthfactor);
+	XMFLOAT3 l_position = lightvector;
+	XMFLOAT3 l_lookAt = XMFLOAT3(-lightvector.x, -lightvector.y, -lightvector.z);
+
+	positionVector = XMLoadFloat3(&l_position);
+	lookAtVector = XMLoadFloat3(&l_lookAt);
+	upVector = XMLoadFloat3(&up);
+
+	// Create the view matrix from the three vectors.
+	return XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+}
+
+void CameraSetupRotateAndDrawAndRotateBack(float angleX, int quadcount_axis1, int quadcount_axis2) {
 	XMVECTOR Forward = XMVector3Normalize(XMLoadFloat3(&cameraForward));
 	XMVECTOR Right = XMVector3Normalize(XMVector3Cross(Forward, XMVectorSet(0, 1, 0, 0)));
 	XMVECTOR Up = XMVector3Normalize(XMVector3Cross(Right, Forward));
@@ -1039,22 +1077,17 @@ void CameraSetup() {
 
 	XMVECTOR Eye = XMLoadFloat3(&cameraPosition);
 	XMVECTOR At = Eye + Forward;
-
-	ConstBuf::camera.view[0] = XMMatrixLookAtLH(Eye, At, Up);
-	//ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
-	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
+	ConstBuf::camera.proj[0] = GenerateProjectionMatrix(100, 1);
 	ConstBuf::camera.world[0] = XMMatrixIdentity();
-}
 
-void RotateAndDraw(float angleX, int quadcount_axis1, int quadcount_axis2) {
-	
-	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(angleX)), ConstBuf::camera.view[0]);
-	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+	// rotate
+	ConstBuf::camera.view[0] = XMMatrixTranspose(GenerateViewMatrix(5));
 	ConstBuf::UpdateCamera();
 
 	InputAssembler::IA(InputAssembler::topology::triList);
 	Blend::Blending(Blend::blendmode::alpha, Blend::blendop::add);
 
+	// draw
 	Textures::RenderTarget(1, 0);
 	Draw::Clear({ 0,0,1,0 });
 	Draw::ClearDepth();
@@ -1065,12 +1098,10 @@ void RotateAndDraw(float angleX, int quadcount_axis1, int quadcount_axis2) {
 	ConstBuf::ConstToVertex(4);
 	ConstBuf::ConstToPixel(4);
 	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
-}
 
-void RotateBack(float angleX) {
-	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
-	ConstBuf::camera.view[0] = XMMatrixMultiply(XMMatrixRotationX(DegreesToRadians(-angleX)), ConstBuf::camera.view[0]);
-	ConstBuf::camera.view[0] = XMMatrixTranspose(ConstBuf::camera.view[0]);
+	// rotate back
+	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
+	ConstBuf::camera.view[0] = XMMatrixTranspose(XMMatrixLookAtLH(Eye, At, Up));
 	ConstBuf::UpdateCamera();
 }
 
@@ -1117,13 +1148,8 @@ void mainLoop()
 
 	controls(currentMousePos, prevMousePos);
 
-	CameraSetup();
-
 	float angleX = 105;
-	//rotate
-	RotateAndDraw(angleX, quadcount_axis1, quadcount_axis2);
-	//rotate back
-	RotateBack(angleX);
+	CameraSetupRotateAndDrawAndRotateBack(angleX, quadcount_axis1, quadcount_axis2);
 
 	UsualDraw(quadcount_axis1, quadcount_axis2);
 
