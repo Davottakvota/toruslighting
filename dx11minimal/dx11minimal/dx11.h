@@ -583,6 +583,7 @@ namespace ConstBuf
 	struct {
 		XMFLOAT4 time;
 		XMFLOAT4 aspect;
+
 	} frame;//update per frame
 
 	//b5
@@ -864,6 +865,9 @@ void Dx11Init()
 	Sampler::Init();
 	Shaders::Init();
 	
+	//shadowmapping sampler slot set
+	Sampler::SamplerComp(0);
+
 	//main RT
 	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, true);
 
