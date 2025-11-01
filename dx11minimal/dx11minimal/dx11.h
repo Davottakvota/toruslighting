@@ -1132,6 +1132,8 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	Shaders::pShader(0);
 	ConstBuf::ConstToVertex(4);
 	ConstBuf::ConstToPixel(4);
+	context->PSSetShaderResources(0, 1, &Textures::Texture[1].DepthResView);
+
 
 
 	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
@@ -1145,7 +1147,7 @@ void mainLoop()
 	POINT currentMousePos;
 	GetCursorPos(&currentMousePos);
 
-	int quadcount_axis1 = 100;
+	int quadcount_axis1 = 200;
 	quadcount_axis1 *= 2;
 	int quadcount_axis2 = quadcount_axis1;
 

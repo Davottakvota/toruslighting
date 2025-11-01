@@ -91,11 +91,11 @@ float3 f(float t) {
 }
 
 float3 fd(float t) {
-    return normalize(f(t + 0.05) - f(t));
+    return normalize(f(t + 0.1) - f(t));
 }
 
 float3 fdd(float t) {
-    return normalize(f(t + 0.05) - 2*f(t) + f(t-0.05));
+    return normalize(f(t + 0.1) - 2*f(t) + f(t-0.1));
 }
 
 float3 g(float t1, float t2) {
