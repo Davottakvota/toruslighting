@@ -865,8 +865,7 @@ void Dx11Init()
 	Sampler::Init();
 	Shaders::Init();
 	
-	//shadowmapping sampler slot set
-	Sampler::SamplerComp(0);
+
 
 	//main RT
 	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, true);
@@ -1081,11 +1080,11 @@ void CameraSetupRotateAndDrawAndRotateBack(float angleX, int quadcount_axis1, in
 
 	XMVECTOR Eye = XMLoadFloat3(&cameraPosition);
 	XMVECTOR At = Eye + Forward;
-	ConstBuf::camera.proj[0] = GenerateProjectionMatrix(100, 1);
-	ConstBuf::camera.world[0] = XMMatrixIdentity();
+	ConstBuf::camera.proj[0] = ConstBuf::camera.proj[1];
+	ConstBuf::camera.world[0] = ConstBuf::camera.world[1];
 
 	// rotate
-	ConstBuf::camera.view[0] = XMMatrixTranspose(GenerateViewMatrix(5));
+	ConstBuf::camera.view[0] = ConstBuf::camera.view[1];
 	ConstBuf::UpdateCamera();
 
 	InputAssembler::IA(InputAssembler::topology::triList);
@@ -1149,6 +1148,13 @@ void mainLoop()
 	int quadcount_axis1 = 100;
 	quadcount_axis1 *= 2;
 	int quadcount_axis2 = quadcount_axis1;
+
+	ConstBuf::camera.proj[1] = GenerateProjectionMatrix(100, 1);
+	ConstBuf::camera.world[1] = XMMatrixIdentity();
+	ConstBuf::camera.view[1] = XMMatrixTranspose(GenerateViewMatrix(5));
+
+	//shadowmapping sampler slot set
+	Sampler::SamplerComp(0);
 
 	controls(currentMousePos, prevMousePos);
 

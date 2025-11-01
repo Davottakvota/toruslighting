@@ -31,6 +31,7 @@ struct VS_OUTPUT
     float4 wpos : POSITION1;
     float3 vnorm : NORMAL1;
     float2 uv : TEXCOORD0;
+    float4 lpos : TEXCOORD1;
 };
 
 float3 rotY(float3 pos, float a)
@@ -127,6 +128,8 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     pos -= float4(2, 0, 0, 0.4);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
+
+    output.lpos = mul(pos, mul(view[1], proj[1]));
 
     float3 N1 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 0) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 1);
     float3 N2 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 2) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 3);
