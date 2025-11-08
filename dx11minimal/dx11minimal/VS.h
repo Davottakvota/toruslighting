@@ -108,8 +108,6 @@ float3 c_t(int x, int y, int n) { // n from 0 to 3
     return g(x - int(x!=2) + int(n == 2) + (y % 2) * int(n < 2), y + int(n == 1) - int(n == 0));
 }
 
-static float3 rect[6] = {float3(0,0,0), float3(1,0,0), float3(0,1,0), float3(1,0,0), float3(0,1,0), float3(1,1,0)};
-
 VS_OUTPUT VS(uint vID : SV_VertexID)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
@@ -120,9 +118,9 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     float vsss = floor(unum / k2);
 
 
-    float3 p = int(vID >= k1 * k2 * 6) * (rect[vID] + float3(-1, 1, 0)) + int(vID < k1 * k2 * 6) * g(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)));
+    float3 p = g(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)));
 
-    p = int(vID < k1 * k2 * 6) * rotZ(p, time[0] * 0.025) + int(vID >= k1 * k2 * 6) * p;
+    p = rotZ(p, time[0] * 0.025);
 
     float4 pos = float4(p, 1);
     pos -= float4(2, 0, 0, 0.4);
@@ -135,7 +133,7 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     float3 N2 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 2) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 3);
 
 
-    output.vnorm = int(vID < k1 * k2 * 6) * rotZ(normalize(cross(N1, N2)), time[0] * 0.025) + int(vID >= k1 * k2 * 6) * normalize(cross(N1, N2));
+    output.vnorm = rotZ(normalize(cross(N1, N2)), time[0] * 0.025);
 
     return output;
 }

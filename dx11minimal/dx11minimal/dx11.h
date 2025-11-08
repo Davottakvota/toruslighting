@@ -471,6 +471,8 @@ namespace Shaders {
 	{
 		CreateVS(0, nameToPatchLPCWSTR("..\\dx11minimal\\VS.h"));
 		CreatePS(0, nameToPatchLPCWSTR("..\\dx11minimal\\PS.h"));
+		CreateVS(1, nameToPatchLPCWSTR("..\\dx11minimal\\VS1.h"));
+		CreatePS(1, nameToPatchLPCWSTR("..\\dx11minimal\\PS1.h"));
 	}
 
 	void vShader(unsigned int n)
@@ -1136,7 +1138,7 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 
 
 
-	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
+	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2, 1);
 	Draw::Present();
 }
 
@@ -1164,5 +1166,6 @@ void mainLoop()
 	CameraSetupRotateAndDrawAndRotateBack(angleX, quadcount_axis1, quadcount_axis2);
 
 	UsualDraw(quadcount_axis1, quadcount_axis2);
+
 
 }
