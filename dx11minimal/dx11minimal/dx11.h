@@ -556,7 +556,7 @@ namespace Sampler
 
 namespace ConstBuf
 {
-	ID3D11Buffer* buffer[6];
+	ID3D11Buffer* buffer[7];
 
 #define constCount 32
 
@@ -579,6 +579,7 @@ namespace ConstBuf
 		XMMATRIX proj[2];
 		int k1;
 		int k2;
+		int poly;
 	} camera;//update per camera set
 
 	//b4
@@ -590,6 +591,9 @@ namespace ConstBuf
 
 	//b5
 	XMFLOAT4 global[constCount];//update once on start
+
+	//b6
+	//int integerconstants[constCount];
 
 	int roundUp(int n, int r)
 	{
@@ -617,6 +621,7 @@ namespace ConstBuf
 		Create(buffer[3], sizeof(camera));
 		Create(buffer[4], sizeof(frame));
 		Create(buffer[5], sizeof(global));
+		//Create(buffer[6], sizeof(integerconstants));
 	}
 
 	template <typename T>
@@ -652,7 +657,7 @@ namespace ConstBuf
 
 
 	namespace getbyname {
-		enum { drawerV, drawerP, drawerMat, camera, frame, global };
+		enum { drawerV, drawerP, drawerMat, camera, frame, global, integerconstants };
 	}
 
 }
@@ -1102,7 +1107,7 @@ void CameraSetupRotateAndDrawAndRotateBack(float angleX, int quadcount_axis1, in
 	Shaders::pShader(0);
 	ConstBuf::ConstToVertex(4);
 	ConstBuf::ConstToPixel(4);
-	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2 + 1, 1);
+	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2, 1);
 
 	// rotate back
 	ConstBuf::camera.proj[0] = XMMatrixTranspose(XMMatrixPerspectiveFovLH(DegreesToRadians(90), iaspect, 0.01f, 100.0f));
@@ -1137,11 +1142,23 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	context->PSSetShaderResources(0, 1, &Textures::Texture[1].DepthResView);
 
 
-
 	Draw::NullDrawer(quadcount_axis1 * quadcount_axis2, 1);
+
+	Shaders::vShader(1);
+	Shaders::pShader(1);
+	ConstBuf::ConstToVertex(4);
+	ConstBuf::ConstToPixel(4);
+	context->PSSetShaderResources(0, 1, &Textures::Texture[1].DepthResView);
+
+	int polycount = 4;
+
+	ConstBuf::camera.poly = polycount;
+
+	Draw::NullDrawer(polycount*polycount, 1);
+
 	Draw::Present();
 }
-
+	
 void mainLoop()
 {
 
@@ -1149,9 +1166,9 @@ void mainLoop()
 	POINT currentMousePos;
 	GetCursorPos(&currentMousePos);
 
-	int quadcount_axis1 = 200;
+	int quadcount_axis1 = 100;
 	quadcount_axis1 *= 2;
-	int quadcount_axis2 = quadcount_axis1;
+	int quadcount_axis2 = 200;
 
 	ConstBuf::camera.proj[1] = GenerateProjectionMatrix(100, 1);
 	ConstBuf::camera.world[1] = XMMatrixIdentity();

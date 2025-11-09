@@ -17,7 +17,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 // Global Variables for camera:
 float cameraYaw = 0.0f;
-float cameraPitch = 0.0f;
+float cameraPitch = 0.0f;                                       
 XMFLOAT3 cameraPosition = XMFLOAT3(-7.0f, 2.5f, -3.0f);
 XMFLOAT3 cameraForward = XMFLOAT3(0, 0, 1);
 XMFLOAT3 cameraRight = XMFLOAT3(1, 0, 0);
