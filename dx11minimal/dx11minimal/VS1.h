@@ -17,7 +17,7 @@ cbuffer camera : register(b3)
     int k1;
     int k2;
 };
-
+ 
 cbuffer drawMat : register(b2)
 {
     float4x4 model;
