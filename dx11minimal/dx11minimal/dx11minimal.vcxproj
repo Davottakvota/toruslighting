@@ -130,10 +130,14 @@
     <ClInclude Include="dx11.h" />
     <ClInclude Include="dx11minimal.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="VS1.h" />
     <None Include="PS.h" />
+    <ClInclude Include="PS1.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <None Include="PSPostprocess.shader" />
     <None Include="VS.h" />
+    <None Include="VSPostprocess.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dx11minimal.cpp" />

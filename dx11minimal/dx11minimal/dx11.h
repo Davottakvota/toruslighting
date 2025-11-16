@@ -473,6 +473,8 @@ namespace Shaders {
 		CreatePS(0, nameToPatchLPCWSTR("..\\dx11minimal\\PS.h"));
 		CreateVS(1, nameToPatchLPCWSTR("..\\dx11minimal\\VS1.h"));
 		CreatePS(1, nameToPatchLPCWSTR("..\\dx11minimal\\PS1.h"));
+		CreateVS(2, nameToPatchLPCWSTR("..\\dx11minimal\\VSPostprocess.shader"));
+		CreatePS(2, nameToPatchLPCWSTR("..\\dx11minimal\\PSPostprocess.shader"));
 	}
 
 	void vShader(unsigned int n)
@@ -875,9 +877,11 @@ void Dx11Init()
 
 
 	//main RT
-	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, true);
+	Textures::Create(0, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), false, false);
 
 	Textures::Create(1, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(1024, 1024), false, true);
+
+	Textures::Create(2, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), true, true);
 
 }
 
@@ -1130,7 +1134,8 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	InputAssembler::IA(InputAssembler::topology::triList);
 	Blend::Blending(Blend::blendmode::alpha, Blend::blendop::add);
 
-	Textures::RenderTarget(0, 0);
+	// tor
+	Textures::RenderTarget(2, 0);
 	Draw::Clear({ 0,0,1,0 });
 	Draw::ClearDepth();
 	Depth::Depth(Depth::depthmode::on);
@@ -1150,11 +1155,29 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	ConstBuf::ConstToPixel(4);
 	context->PSSetShaderResources(0, 1, &Textures::Texture[1].DepthResView);
 
+
+	// plane
 	int polycount = 4;
 
 	ConstBuf::camera.poly = polycount;
 
 	Draw::NullDrawer(polycount*polycount, 1);
+	Textures::CreateMipMap();
+
+	// postprocess
+	
+
+	Sampler::Sampler(targetshader::pixel, 0, Sampler::filter::point, Sampler::addr::clamp, Sampler::addr::clamp);
+	Textures::RenderTarget(0, 0);
+	Draw::Clear({ 0,0,1,0 });
+	Draw::ClearDepth();
+	Depth::Depth(Depth::depthmode::off);
+	Rasterizer::Cull(Rasterizer::cullmode::off);
+	Shaders::vShader(2);
+	Shaders::pShader(2);
+	context->PSSetShaderResources(0, 1, &Textures::Texture[2].TextureResView);
+
+	Draw::NullDrawer(1, 1);
 
 	Draw::Present();
 }
@@ -1176,6 +1199,7 @@ void mainLoop()
 
 	//shadowmapping sampler slot set
 	Sampler::SamplerComp(0);
+
 
 	controls(currentMousePos, prevMousePos);
 
