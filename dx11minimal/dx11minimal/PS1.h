@@ -1,4 +1,4 @@
-Texture2D shadowMap : register(t0);  // Текстура глубины
+Texture2D shadowMap : register(t0); 
 SamplerComparisonState shadowSampler : register(s0);  // Comparison sampler
 
 
@@ -66,7 +66,7 @@ float4 PS(VS_OUTPUT input) : SV_Target
 
     float3 h = 2 * (dot(lightvector, input.vnorm) * input.vnorm) - lightvector;
     
-    float3 I = 0.05 * float3(1, 1, 1) + 0.004 * max(dot(lightvector, input.vnorm), 0) * float3(0, 190, 255) * shadow + 0.001 * max(pow(dot(h, input.vnorm), 52), 0) * float3(1, 1, 1);
+    float3 I = 0.05 * float3(1, 1, 1) + 0.004 * max(dot(lightvector, input.vnorm), 0) * float3(100, 190, 255) * shadow + 0.001 * max(pow(dot(h, input.vnorm), 52), 0) * float3(1, 1, 1);
     
     I -= float3(0.9, 0, 1) * hash11(int(200*input.vnorm[0]))*0.15;
 
