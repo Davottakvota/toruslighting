@@ -85,8 +85,7 @@ static int q0 = 1;
 static float s = 0.35;
 
 float3 f(float t) {
-    float r = cos(2 * pi * q0 * t / k1) + 2.0;
-    float3 res = float3(r * cos(2 * pi * p0 * t / k1), r * sin(2 * pi * p0 * t / k1), -sin(2 * pi * q0 * t / k1));
+    float3 res = float3(cos(2 * pi * t / k1), 0, sin(2 * pi * t / k1));
     return res;
 }
 
@@ -105,7 +104,7 @@ float3 g(float t1, float t2) {
 }
 
 float3 c_t(int x, int y, int n) { // n from 0 to 3
-    return g(x - int(x!=2) + int(n == 2) + (y % 2) * int(n < 2), y + int(n == 1) - int(n == 0));
+    return g(x + int(n == 2) - int(n == 3), y + int(n == 1) - int(n == 0));
 }
 
 VS_OUTPUT VS(uint vID : SV_VertexID)
@@ -117,21 +116,22 @@ VS_OUTPUT VS(uint vID : SV_VertexID)
     int unum = floor(vID / 6.0);
     float vsss = floor(unum / k2);
 
+    float arg1 = unum + (int(vID % 6 == 1) - int(vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2;
+    float arg2 = vsss + (int(vID % 6 == 2) - int(vID % 6 == 5));
 
-    float3 p = g(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)));
+    float3 p = g(arg1, arg2);
 
     p = rotZ(p, time[0] * 0.025);
 
     float4 pos = float4(p, 1);
-    pos -= float4(2, 0, 0, 0.4);
+    //pos -= float4(2, 0, 0, 0.4);
     output.pos = mul(pos, mul(view[0], proj[0]));
     output.uv = float2(1, -1) * p / 2. + .5;
 
     output.lpos = mul(pos, mul(view[1], proj[1]));
 
-    float3 N1 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 0) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 1);
-    float3 N2 = c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 2) - c_t(unum + (1 - 2 * (vsss % 2)) * int((vID % 6 == 1) || (vID % 6 == 4)) + (int(vID % 6 == 2) - int(vID % 6 == 5)) * k2, vsss + (int(vID % 6 == 2) - int(vID % 6 == 5)), 3);
-
+    float3 N1 = c_t(arg1,arg2, 0) - c_t(arg1, arg2, 1);
+    float3 N2 = c_t(arg1, arg2, 2) - c_t(arg1, arg2, 3);
 
     output.vnorm = rotZ(normalize(cross(N1, N2)), time[0] * 0.025);
 

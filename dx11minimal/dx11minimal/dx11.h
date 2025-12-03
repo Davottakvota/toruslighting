@@ -1189,9 +1189,8 @@ void mainLoop()
 	POINT currentMousePos;
 	GetCursorPos(&currentMousePos);
 
-	int quadcount_axis1 = 100;
-	quadcount_axis1 *= 2;
-	int quadcount_axis2 = 200;
+	int quadcount_axis2 = 5;
+	int quadcount_axis1 = 2*quadcount_axis2+6;
 
 	ConstBuf::camera.proj[1] = GenerateProjectionMatrix(100, 1);
 	ConstBuf::camera.world[1] = XMMatrixIdentity();
