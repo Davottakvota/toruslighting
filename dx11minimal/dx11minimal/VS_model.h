@@ -8,11 +8,30 @@ cbuffer camera : register(b3)
     int poly;
 };
 
+cbuffer frame : register(b4)
+{
+    float4 time;
+    float4 aspect;
+};
+
 cbuffer drawMat : register(b2)
 {
     float4x4 model;
     float hilight;
 };
+
+float3 rotZ(float3 pos, float a)
+{
+    float3x3 m =
+    {
+        1, 0, 0,
+        0, cos(a), sin(a),
+        0,-sin(a), cos(a),
+
+    };
+    pos = mul(pos, m);
+    return pos;
+}
 
 struct VS_INPUT
 {
@@ -34,8 +53,11 @@ struct VS_OUTPUT
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
-
-    float4 worldPos = mul(float4(input.Pos, 1.0), model);
+    float3 p = input.Pos;
+    p += float3(0, 0, -5);
+    p = rotZ(p, time[0] * 0.025 + 0.5*3.1415);
+    p += float3(0, 5, 0);
+    float4 worldPos = mul(float4(p, 1.0), model);
     output.wpos = worldPos;
     output.vpos = mul(worldPos, view[0]);
     output.pos = mul(output.vpos, proj[0]);

@@ -10,10 +10,10 @@
 #include "DirectXMath.h"
 #include <DirectXPackedVector.h>
 #include <debugapi.h>
-// Основные заголовки Assimp
-#include <assimp/Importer.hpp>      // Интерфейс для импорта
-#include <assimp/scene.h>           // Структура данных сцены
-#include <assimp/postprocess.h>     // Флаги постобработки
+// ???????? ????????? Assimp
+#include <assimp/Importer.hpp>      // ????????? ??? ???????
+#include <assimp/scene.h>           // ????????? ?????? ?????
+#include <assimp/postprocess.h>     // ????? ?????????????
 
 using namespace DirectX;
 
@@ -421,6 +421,7 @@ namespace Shaders {
 	typedef struct {
 		ID3D11VertexShader* pShader;
 		ID3DBlob* pBlob;
+		ID3D11InputLayout* pLayout;
 	} VertexShader;
 
 	typedef struct {
@@ -879,8 +880,14 @@ namespace InputAssembler
 		}
 
 		context->IASetPrimitiveTopology(ttype);
-		context->IASetInputLayout(NULL);
-		context->IASetVertexBuffers(0, 0, NULL, NULL, NULL);
+		context->IASetInputLayout(Shaders::VS[3].pLayout);
+
+		unsigned int stride = sizeof(cubeModel.vertexBuffer);
+		unsigned int offset = 0;
+
+		// Set the vertex buffer to active in the input assembler so it can be rendered.
+		context->IASetVertexBuffers(0, 1, &cubeModel.vertexBuffer, &stride, &offset);
+		context->IASetIndexBuffer(cubeModel.indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	}
 	void IASetBuffers(ID3D11Buffer* vertexBuffer, UINT stride, ID3D11Buffer* indexBuffer = nullptr)
 	{
@@ -920,7 +927,7 @@ Model LoadOBJModel(const std::string& filename)
 		return model;
 	}
 
-	// Проходим по всем мешам
+	// ???????? ?? ???? ?????
 	for (unsigned int m = 0; m < scene->mNumMeshes; m++)
 	{
 		aiMesh* mesh = scene->mMeshes[m];
@@ -929,12 +936,12 @@ Model LoadOBJModel(const std::string& filename)
 		{
 			SimpleVertex vertex;
 
-			// Позиция
+			// ???????
 			vertex.Pos.x = mesh->mVertices[v].x;
 			vertex.Pos.y = mesh->mVertices[v].y;
 			vertex.Pos.z = mesh->mVertices[v].z;
 
-			// Нормаль
+			// ???????
 			if (mesh->HasNormals())
 			{
 				vertex.Normal.x = mesh->mNormals[v].x;
@@ -942,7 +949,7 @@ Model LoadOBJModel(const std::string& filename)
 				vertex.Normal.z = mesh->mNormals[v].z;
 			}
 
-			// Текстурные координаты
+			// ?????????? ??????????
 			if (mesh->HasTextureCoords(0))
 			{
 				vertex.TexCoord.x = mesh->mTextureCoords[0][v].x;
@@ -952,7 +959,7 @@ Model LoadOBJModel(const std::string& filename)
 			vertices.push_back(vertex);
 		}
 
-		// Индексы
+		// ???????
 		for (unsigned int f = 0; f < mesh->mNumFaces; f++)
 		{
 			aiFace face = mesh->mFaces[f];
@@ -967,7 +974,7 @@ Model LoadOBJModel(const std::string& filename)
 
 	model.indexCount = (UINT)indices.size();
 
-	// Создаем вершинный буфер
+	// ??????? ????????? ?????
 	D3D11_BUFFER_DESC vbd;
 	ZeroMemory(&vbd, sizeof(vbd));
 	vbd.Usage = D3D11_USAGE_DEFAULT;
@@ -985,7 +992,7 @@ Model LoadOBJModel(const std::string& filename)
 		OutputDebugStringA("Failed to create vertex buffer\n");
 	}
 
-	// Создаем индексный буфер
+	// ??????? ????????? ?????
 	D3D11_BUFFER_DESC ibd;
 	ZeroMemory(&ibd, sizeof(ibd));
 	ibd.Usage = D3D11_USAGE_DEFAULT;
@@ -1013,7 +1020,7 @@ Model LoadOBJModel(const std::string& filename)
 
 void CreateModelInputLayout()
 {
-	// Проверяем, что шейдерный blob существует
+	// ?????????, ??? ????????? blob ??????????
 	if (!Shaders::VS[3].pBlob)
 	{
 		OutputDebugStringA("Shader blob for model is NULL!\n");
@@ -1060,7 +1067,7 @@ void Dx11Init()
 	Sampler::Init();
 	Shaders::Init();
 	
-	// Создаем Input Layout после инициализации шейдеров
+	// ??????? Input Layout ????? ????????????? ????????
 	CreateModelInputLayout();
 
 	//main RT
@@ -1070,7 +1077,7 @@ void Dx11Init()
 
 	Textures::Create(2, Textures::tType::flat, Textures::tFormat::u8, XMFLOAT2(width, height), true, true);
 
-	cubeModel = LoadOBJModel("cube.obj");
+	cubeModel = LoadOBJModel("torus.obj");
 }
 
 
@@ -1309,7 +1316,7 @@ void CameraSetupRotateAndDrawAndRotateBack(float angleX, int quadcount_axis1, in
 
 void DrawModel(Model& model)
 {
-	// Проверки
+	// ????????
 	if (!model.vertexBuffer || !model.indexBuffer)
 	{
 		OutputDebugStringA("Model buffers are NULL!\n");
@@ -1328,16 +1335,16 @@ void DrawModel(Model& model)
 		return;
 	}
 
-	// Устанавливаем буферы
+	// ????????????? ??????
 	InputAssembler::IASetBuffers(model.vertexBuffer, sizeof(SimpleVertex), model.indexBuffer);
 	context->IASetInputLayout(modelInputLayout);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// Устанавливаем шейдеры
+	// ????????????? ???????
 	Shaders::vShader(3);
 	Shaders::pShader(3);
 
-	// Устанавливаем все константные буферы
+	// ????????????? ??? ??????????? ??????
 	ConstBuf::ConstToVertex(2); // drawMat
 	ConstBuf::ConstToPixel(2);
 	ConstBuf::ConstToVertex(3); // camera
@@ -1348,13 +1355,13 @@ void DrawModel(Model& model)
 	ConstBuf::ConstToPixel(5);
 	ConstBuf::ConstToPixel(1);  // params
 
-	// Устанавливаем текстуру теневой карты и сэмплер
+	// ????????????? ???????? ??????? ????? ? ???????
 	context->PSSetShaderResources(0, 1, &Textures::Texture[1].DepthResView);
 
-	// Настройки растеризации
-	Rasterizer::Cull(Rasterizer::cullmode::back); // Используем back-face culling для куба
+	// ????????? ????????????
+	Rasterizer::Cull(Rasterizer::cullmode::off); // ?????????? back-face culling ??? ????
 
-	// Рисуем
+	// ??????
 	context->DrawIndexed(model.indexCount, 0, 0);
 }
 
@@ -1375,18 +1382,16 @@ void UsualDraw(int quadcount_axis1, int quadcount_axis2) {
 	Textures::RenderTarget(2, 0);
 
 	// cube model
-	Draw::Clear({ 0,0,1,0 });  // Черный фон для теста
+	Draw::Clear({ 0,0,1,0 });  // ?????? ??? ??? ?????
 	Draw::ClearDepth();
 	Depth::Depth(Depth::depthmode::on);
 	ConstBuf::drawerMat.model = XMMatrixIdentity();
 	ConstBuf::drawerMat.hilight = 1.0f;
 	ConstBuf::UpdateDrawerMat();
-	// Отрисовываем модель
+	// ???????????? ??????
 	DrawModel(cubeModel);
 
 	// tor
-	Draw::Clear({ 0,0,1,0 });
-	Draw::ClearDepth();
 	Depth::Depth(Depth::depthmode::on);
 	Rasterizer::Cull(Rasterizer::cullmode::off);
 	Shaders::vShader(0);
