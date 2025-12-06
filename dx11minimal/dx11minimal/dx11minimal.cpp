@@ -80,7 +80,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             timer::nextFrameTime = timer::frameBeginTime + FRAME_LEN;
         }
 
-        Sleep((DWORD)min(FRAME_LEN, max(FRAME_LEN - timer::frameRenderingDuration, 0)));
+        Sleep((DWORD)std::min(FRAME_LEN, max(FRAME_LEN - timer::frameRenderingDuration, 0)));
     }
 
     return (int) msg.wParam;

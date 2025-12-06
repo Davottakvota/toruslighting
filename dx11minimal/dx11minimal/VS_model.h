@@ -1,15 +1,3 @@
-// VS_model.h
-cbuffer global : register(b5)
-{
-    float4 gConst[32];
-};
-
-cbuffer frame : register(b4)
-{
-    float4 time;
-    float4 aspect;
-};
-
 cbuffer camera : register(b3)
 {
     float4x4 world[2];
@@ -17,6 +5,7 @@ cbuffer camera : register(b3)
     float4x4 proj[2];
     int k1;
     int k2;
+    int poly;
 };
 
 cbuffer drawMat : register(b2)
@@ -27,9 +16,9 @@ cbuffer drawMat : register(b2)
 
 struct VS_INPUT
 {
-    float3 pos : POSITION;
-    float3 norm : NORMAL;
-    float2 uv : TEXCOORD0;
+    float3 Pos : POSITION;
+    float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
 };
 
 struct VS_OUTPUT
@@ -44,19 +33,16 @@ struct VS_OUTPUT
 
 VS_OUTPUT VS(VS_INPUT input)
 {
-    VS_OUTPUT output = (VS_OUTPUT)0;
+    VS_OUTPUT output;
 
-    // Применяем матрицу модели
-    float4 worldPos = mul(float4(input.pos, 1.0), model);
-    float4 viewPos = mul(worldPos, view[0]);
-    output.pos = mul(viewPos, proj[0]);
-
+    float4 worldPos = mul(float4(input.Pos, 1.0), model);
     output.wpos = worldPos;
-    output.vnorm = mul(float4(input.norm, 0.0), model).xyz;
-    output.uv = input.uv;
-
-    // Для теней
-    output.lpos = mul(worldPos, mul(view[1], proj[1]));
+    output.vpos = mul(worldPos, view[0]);
+    output.pos = mul(output.vpos, proj[0]);
+    output.lpos = mul(worldPos, view[1]);
+    output.lpos = mul(output.lpos, proj[1]);
+    output.vnorm = normalize(mul(input.Normal, (float3x3)model));
+    output.uv = input.TexCoord;
 
     return output;
 }

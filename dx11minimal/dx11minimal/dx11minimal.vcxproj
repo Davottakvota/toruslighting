@@ -130,7 +130,7 @@
     <ClInclude Include="dx11.h" />
     <ClInclude Include="dx11minimal.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="model.h" />
+    <ClInclude Include="PS_model.h" />
     <ClInclude Include="VS1.h" />
     <ClInclude Include="VS_model.h" />
     <None Include="PS.h" />
@@ -143,8 +143,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dx11minimal.cpp" />
-    <ClCompile Include="model.cpp" />
-    <ClCompile Include="model_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dx11minimal.rc" />
@@ -152,6 +150,10 @@
   <ItemGroup>
     <Image Include="dx11minimal.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="cube.obj" />
+    <Object Include="torus.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
